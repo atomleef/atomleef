@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Click-to-Bloom Flowers & Cats</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: black;
+      font-family: monospace;
+    }
+    .flower {
+      position: absolute;
+      white-space: pre;
+      opacity: 0.9;
+      pointer-events: none;
+      transition: transform 1s ease-out;
+    }
+    .small-cat, .mouse-cat {
+      position: absolute;
+      color: white;
+      white-space: pre;
+      pointer-events: none;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<script>
+  // === FLOWER BLOOM ON CLICK ===
+  const flowerShapes = [
+    "  @@@\n @@@@\n   |",
+    "  \\|/\n --*--\n  /|\\",
+    "  (_) \n <(_)>\n  (_) \n   |",
+    "  .-.\n /   \\\n |   |\n \\___/\n   |"
+  ];
+  const flowerColors = ['red', 'orange', 'yellow', 'green', 'blue', 'violet', 'deeppink'];
+  const flowers = [];
+
+  function createFlower(x, y) {
+    const el = document.createElement('div');
+    el.className = 'flower';
+    el.innerText = flowerShapes[Math.floor(Math.random() * flowerShapes.length)];
+    el.style.color = flowerColors[Math.floor(Math.random() * flowerColors.length)];
+    el.style.fontSize = `${10 + Math.random() * 14}px`;
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+
+    document.body.appendChild(el);
+    const dx = (Math.random() - 0.5) * 0.5;
+    const dy = (Math.random() - 0.5) * 0.5;
+
+    flowers.push({ el, dx, dy });
+  }
+
+  document.addEventListener('click', (e) => {
+    for (let i = 0; i < 10; i++) {
+      const offsetX = (Math.random() - 0.5) * 100;
+      const offsetY = (Math.random() - 0.5) * 100;
+      createFlower(e.clientX + offsetX, e.clientY + offsetY);
+    }
+  });
+
+  function animateFlowers() {
+    flowers.forEach(f => {
+      let x = parseFloat(f.el.style.left);
+      let y = parseFloat(f.el.style.top);
+      x += f.dx;
+      y += f.dy;
+      if (x < 0 || x > window.innerWidth - 30) f.dx *= -1;
+      if (y < 0 || y > window.innerHeight - 30) f.dy *= -1;
+      f.el.style.left = x + 'px';
+      f.el.style.top = y + 'px';
+    });
+    requestAnimationFrame(animateFlowers);
+  }
+  animateFlowers();
+
+  // === SMALL RANDOM WALKING CATS ===
+  const smallCatFrames = [
+` /\\_/\\ 
+( o.o )
+ > ^ <`,
+` /\\_/\\ 
+( o.o )
+ < ^ >`
+  ];
+
+  const smallCats = [];
+
+  function spawnSmallCat() {
+    const el = document.createElement('div');
+    el.className = 'small-cat';
+    el.innerText = smallCatFrames[0];
+    document.body.appendChild(el);
+
+    const x = Math.random() * window.innerWidth;
+    const y = Math.random() * window.innerHeight;
+    const dx = (Math.random() - 0.5) * 1;
+    const dy = (Math.random() - 0.5) * 1;
+
+    smallCats.push({ el, x, y, dx, dy, frame: 0 });
+
+    if (smallCats.length > 30) {
+      document.body.removeChild(smallCats[0].el);
+      smallCats.shift();
+    }
+  }
+
+  setInterval(spawnSmallCat, 1000);
+
+  function animateSmallCats() {
+    smallCats.forEach(c => {
+      c.frame = (c.frame + 1) % smallCatFrames.length;
+      c.el.innerText = smallCatFrames[c.frame];
+      c.x += c.dx;
+      c.y += c.dy;
+      if (c.x < 0 || c.x > window.innerWidth - 50) c.dx *= -1;
+      if (c.y < 0 || c.y > window.innerHeight - 50) c.dy *= -1;
+      c.el.style.left = c.x + 'px';
+      c.el.style.top = c.y + 'px';
+    });
+    requestAnimationFrame(animateSmallCats);
+  }
+  animateSmallCats();
+
+  // === MOUSE-FOLLOWING CAT (SIDE VIEW) ===
+  const mouseCatFrames = [
+`  /\\_____/\\
+ (  o   o  )
+ (    =    )
+ (  |   |  )
+ (__|___|__)`,
+`  /\\_____/\\
+ (  o   o  )
+ (    =    )
+ ( /|   |\\ )
+ (_/     \\_)`
+  ];
+
+  const mouseCat = document.createElement('div');
+  mouseCat.className = 'mouse-cat';
+  mouseCat.innerText = mouseCatFrames[0];
+  document.body.appendChild(mouseCat);
+
+  let catX = window.innerWidth / 2;
+  let catY = window.innerHeight / 2;
+  let targetX = catX;
+  let targetY = catY;
+  let catFrame = 0;
+  let isMouseMoving = false;
+  let stopTimeout;
+
+  document.addEventListener('mousemove', (e) => {
+    targetX = e.clientX;
+    targetY = e.clientY;
+    isMouseMoving = true;
+    clearTimeout(stopTimeout);
+    stopTimeout = setTimeout(() => {
+      isMouseMoving = false;
+    }, 300);
+  });
+
+  function animateMouseCat() {
+    const dx = targetX - catX;
+    const dy = targetY - catY;
+    catX += dx * 0.1;
+    catY += dy * 0.1;
+
+    if (isMouseMoving && (Math.abs(dx) > 1 || Math.abs(dy) > 1)) {
+      catFrame = (catFrame + 1) % mouseCatFrames.length;
+      mouseCat.innerText = mouseCatFrames[catFrame];
+    }
+
+    mouseCat.style.left = catX + 'px';
+    mouseCat.style.top = catY + 'px';
+
+    requestAnimationFrame(animateMouseCat);
+  }
+  animateMouseCat();
+</script>
+
+</body>
+</html>
